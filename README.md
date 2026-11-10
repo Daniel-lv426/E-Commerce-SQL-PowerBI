@@ -21,6 +21,86 @@ Jego głównym celem jest dostarczenie stabilnego i spójnego źródła danych o
 3. **Analityka i DAX (Power BI):**
    - Wdrożenie modelu relacyjnego typu wiele-do-1.
    - Stworzenie kluczowych wskaźników biznesowych: suma wartości, średnia wartość koszyka, udziały procentowe z użyciem `REMOVEFILTERS` oraz dynamiczne karty łączące funkcję `TOPN` z formatowaniem tekstowym (`UNICHAR(10)`).
+  
+### Utworzone miary DAX:
+
+**% Udział w Liczbie Zamówień:**
+```dax
+% Udział w Liczbie Zamówień = 
+VAR LiczbaZamowien = [Liczba zamówień]
+VAR CalaLiczbaZamowien = CALCULATE([Liczba zamówień], REMOVEFILTERS(produkty), REMOVEFILTERS(klienci))
+RETURN
+IF(ISBLANK(LiczbaZamowien), 0, DIVIDE(LiczbaZamowien, CalaLiczbaZamowien, 0))
+```
+**% Udział Wydanej Sumy:**
+```dax
+% Udział Wydanej Sumy = 
+VAR SumaWartosci = [Suma Wartości]
+VAR CalkowitaSumaWartosci = CALCULATE([Suma Wartości], REMOVEFILTERS(klienci), REMOVEFILTERS(produkty))
+RETURN
+DIVIDE(SumaWartosci, CalkowitaSumaWartosci, 0)
+```
+**Liczba zamówień:**
+```dax
+Liczba zamówień = 
+COUNTROWS(zamowienia)
+```
+**Suma Ilości Sprzedanych Produktów:**
+```dax
+Suma Ilości Sprzedanych Produktów = 
+SUM(zamowienia[ilosc])
+```
+**Suma Kosztów Wysyłki:**
+```dax
+Suma Kosztów Wysyłki = 
+SUM(zamowienia[koszt_wysylki])
+```
+**Suma Wartości:**
+```dax
+Suma Wartości = 
+SUMX(zamowienia, zamowienia[ilosc] * RELATED(produkty[cena_jednostkowa]))
+```
+**Średni Koszt Wysyłki:**
+```dax
+Średni Koszt Wysyłki = 
+AVERAGEX(zamowienia, [Suma Kosztów Wysyłki])
+```
+**Średnia Wartość Koszyka:**
+```dax
+Średnia Wartość Koszyka = 
+AVERAGEX(zamowienia, [Suma Wartości])
+```
+**Top Klient:**
+```dax
+Top Klient = 
+VAR TopIDKlient = TOPN(1, VALUES(klienci[id_klienta]), [Suma Wartości], DESC)
+VAR TopKlient = TOPN(1, VALUES(klienci[imie_nazwisko]), [Suma Wartości], DESC)
+VAR Ilosc = CALCULATE([% Udział w Liczbie Zamówień], TopKlient)
+VAR Wartosc = CALCULATE([% Udział Wydanej Sumy] , TopKlient)
+RETURN
+TopKlient & UNICHAR(10) & "Numer ID: " & TopIDKlient & UNICHAR(10) & FORMAT(Wartosc, "#,##0.00%") & " zysku" & UNICHAR(10) & FORMAT(Ilosc, "#,##0%") & " ilości zamówień"
+```
+**Top Klient:**
+```dax
+Top Klient = 
+VAR TopIDKlient = TOPN(1, VALUES(klienci[id_klienta]), [Suma Wartości], DESC)
+VAR TopKlient = TOPN(1, VALUES(klienci[imie_nazwisko]), [Suma Wartości], DESC)
+VAR Ilosc = CALCULATE([% Udział w Liczbie Zamówień], TopKlient)
+VAR Wartosc = CALCULATE([% Udział Wydanej Sumy] , TopKlient)
+RETURN
+TopKlient & UNICHAR(10) & "Numer ID: " & TopIDKlient & UNICHAR(10) & FORMAT(Wartosc, "#,##0.00%") & " zysku" & UNICHAR(10) & FORMAT(Ilosc, "#,##0%") & " ilości zamówień"
+```
+**Kalendarz:**
+```dax
+Kalendarz = 
+CALENDAR(MIN(zamowienia[data_zamowienia]), MAX(zamowienia[data_zamowienia]))
+```
+**Miesiąc i Rok:**
+```dax
+Miesiąc i Rok = 
+FORMAT(Kalendarz[Date], "mmmm yyyy")
+```
+
 
 ## Struktura Repozytorium
 - `01_schema.sql` — Tworzenie schematu bazy danych.
