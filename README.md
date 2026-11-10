@@ -80,15 +80,14 @@ VAR Wartosc = CALCULATE([% Udział Wydanej Sumy] , TopKlient)
 RETURN
 TopKlient & UNICHAR(10) & "Numer ID: " & TopIDKlient & UNICHAR(10) & FORMAT(Wartosc, "#,##0.00%") & " zysku" & UNICHAR(10) & FORMAT(Ilosc, "#,##0%") & " ilości zamówień"
 ```
-**Top Klient:**
+**Top Produkt:**
 ```dax
-Top Klient = 
-VAR TopIDKlient = TOPN(1, VALUES(klienci[id_klienta]), [Suma Wartości], DESC)
-VAR TopKlient = TOPN(1, VALUES(klienci[imie_nazwisko]), [Suma Wartości], DESC)
-VAR Ilosc = CALCULATE([% Udział w Liczbie Zamówień], TopKlient)
-VAR Wartosc = CALCULATE([% Udział Wydanej Sumy] , TopKlient)
+Top Produkt = 
+VAR TopProdukt = TOPN(1, VALUES(produkty[nazwa_produktu]), [Suma Ilości Sprzedanych Produktów], DESC, [Suma Wartości], DESC)
+VAR IloscSztuk = CALCULATE([Suma Ilości Sprzedanych Produktów], TopProdukt)
+VAR Zysk = CALCULATE([Suma Wartości], TopProdukt)
 RETURN
-TopKlient & UNICHAR(10) & "Numer ID: " & TopIDKlient & UNICHAR(10) & FORMAT(Wartosc, "#,##0.00%") & " zysku" & UNICHAR(10) & FORMAT(Ilosc, "#,##0%") & " ilości zamówień"
+TopProdukt & UNICHAR(10) & "Ilość sztuk: " & IloscSztuk & " szt." & UNICHAR(10) & "Suma zysku: " & FORMAT(Zysk, "#,###0 zł")
 ```
 **Kalendarz:**
 ```dax
